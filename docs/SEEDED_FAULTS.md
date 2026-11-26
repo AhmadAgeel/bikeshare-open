@@ -77,3 +77,86 @@ python -m pytest tests/ -q
 16 passed in 7.98s
 
 ```
+
+## Fault 2 - Rolling mean includes today
+
+Injected change:
+```python
+out[TARGET].rolling(LAG_WARMUP).mean()
+```
+
+Manual hook invocation exit code: 2
+Hook stderr (actual):
+```text
+Leakage tests failed after editing src/features.py:
+[714 rows x 29 columns]
+
+    def test_rolling_mean_excludes_today(feats):
+        """cnt_roll_7 must be the mean of the 7 calendar days *before* today."""
+        by_date = feats.set_index("dteday")[TARGET]
+        date = feats.dteday.iloc[200]
+        window = [date - pd.Timedelta(days=k) for k in range(1, 8)]
+        if all(d in by_date.index for d in window):
+            expected = sum(by_date[d] for d in window) / 7
+>           assert feats.set_index("dteday").cnt_roll_7[date] == pytest.approx(expected)
+E           assert np.float64(4389.0) == 4414.857142857143 ± 0.00441486
+E             
+E             comparison failed
+E             Obtained: 4389.0
+E             Expected: 4414.857142857143 ± 0.00441486
+
+tests/test_leakage.py:58: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_leakage.py::test_rolling_mean_excludes_today - assert np.fl...
+1 failed, 8 passed in 5.31s
+
+```
+Hook stdout (actual):
+```text
+
+```
+Test exit code: 2
+Failing test output (actual):
+```text
+python -m pytest tests/ -q
+........F.......                                                         [100%]
+=================================== FAILURES ===================================
+_______________________ test_rolling_mean_excludes_today _______________________
+
+feats =         dteday  instant  season  ...  cnt_lag_1 cnt_lag_7   cnt_roll_7
+0   2011-01-10     10.0  WINTER  ...      822.0...    1787.0  1531.428571
+713 2012-12-31    731.0  WINTER  ...     1796.0     920.0  1789.857143
+
+[714 rows x 29 columns]
+
+    def test_rolling_mean_excludes_today(feats):
+        """cnt_roll_7 must be the mean of the 7 calendar days *before* today."""
+        by_date = feats.set_index("dteday")[TARGET]
+        date = feats.dteday.iloc[200]
+        window = [date - pd.Timedelta(days=k) for k in range(1, 8)]
+        if all(d in by_date.index for d in window):
+            expected = sum(by_date[d] for d in window) / 7
+>           assert feats.set_index("dteday").cnt_roll_7[date] == pytest.approx(expected)
+E           assert np.float64(4389.0) == 4414.857142857143 ± 0.00441486
+E             
+E             comparison failed
+E             Obtained: 4389.0
+E             Expected: 4414.857142857143 ± 0.00441486
+
+tests/test_leakage.py:58: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_leakage.py::test_rolling_mean_excludes_today - assert np.fl...
+1 failed, 15 passed in 12.94s
+make: *** [Makefile:16: test] Error 1
+
+```
+Repair: original source bytes restored by script.
+Agent repair turns: N/A (manual restoration).
+PostToolUse hook was invoked manually, not by Claude's Edit tool.
+Recovery output:
+```text
+python -m pytest tests/ -q
+................                                                         [100%]
+16 passed in 7.62s
+
+```
