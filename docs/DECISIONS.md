@@ -9,3 +9,4 @@ Agents append here via the `/new-feature` skill; you append here by hand.
 - Split 2011 / H1 2012 / H2 2012 by date. Test set touched once, after all feature work.
 - Report mean and persistence baselines with every score. Persistence (test R^2 0.510, MAE 840) is within 0.07 R^2 of ridge and beats it on MAE; that caveat goes in the report.
 - 2026-11-25: Keep `humidity_interaction` feature calculation and test; exclude it from predictors due to negative impact on validation R² (Ridge 0.6475 → 0.6438, HGB 0.2185 → 0.1868). Formula: humidity_interaction = hum.shift(1) * temp.shift(1). It is not leakage.
+- 2026-11-25: Added `/verify-pipeline` for the repeated test-and-status workflow; updated CLAUDE.md to preserve the documented feature-drop decision and verification procedure.

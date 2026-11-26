@@ -39,3 +39,7 @@ rides) from calendar, weather, and lagged-demand features.
   cannot extrapolate to 2012. That is the headline result, not an error.
 - 2012-10-29 (Hurricane Sandy, 22 rides) is in the test set. Expect it in
   any residual plot.
+
+- Keep `humidity_interaction` excluded from predictors: validation R² worsened.
+  Preserve its calculation and regression test.
+- Use `/verify-pipeline tests` after changes to verify results and Git status.
