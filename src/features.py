@@ -67,6 +67,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
 
     # --- Weather: measured same-day, available to a forecaster ----------
     out["weather_severity"] = encode_weather(out.weather)
+    out["humidity_interaction"] = out["hum"].shift(1) * out["temp"].shift(1)
 
     # --- Lagged target: past values only. shift(1) is the whole ballgame;
     # without it, cnt_roll_7 would contain today's count. -----------------
@@ -81,7 +82,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
 def feature_columns(df: pd.DataFrame) -> list[str]:
     """Numeric columns that are safe to feed the model."""
     numeric = df.select_dtypes(include="number").columns
-    return [c for c in numeric if c not in FORBIDDEN]
+    return [c for c in numeric if c not in FORBIDDEN and c != "humidity_interaction"]
 
 
 if __name__ == "__main__":
