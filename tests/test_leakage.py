@@ -13,6 +13,7 @@ from src.ingest import load_raw
 
 
 @pytest.fixture(scope="module")
+
 def feats():
     return build_features(load_raw())
 
@@ -64,3 +65,11 @@ def test_no_missing_values(feats):
 def test_dates_are_sorted_and_unique(feats):
     assert feats.dteday.is_monotonic_increasing
     assert feats.dteday.is_unique
+
+
+# New test for humidity_interaction
+
+def test_humidity_interaction_value(feats):
+    date = pd.to_datetime('2012-01-01')
+    row = feats[feats['dteday'] == date].iloc[0]
+    assert row['humidity_interaction'] == pytest.approx(694.043791)
