@@ -106,8 +106,7 @@ Check exactly four things:
 Verify by reading files and running code. Do not accept a docstring or a
 README claim as evidence.
 
-Your final answer is a single JSON object matching the schema you were
-given. No prose around it.
+Your final answer must be ONLY a valid JSON object with these fields: repo (string), leakage ("none", "suspected", or "confirmed"), temporal_ok (boolean), baseline_reported (boolean), reproducible (boolean), findings (array), confidence ("low", "medium", or "high"). Each finding must contain file (string), line (integer), issue (string), and why_it_matters (string). No markdown or surrounding prose.
 """
 
 # Enforced by the SDK: the final turn must validate against this schema and
@@ -157,16 +156,27 @@ async def audit_repo(repo: Path) -> dict[str, Any]:
         # automatically in a headless run, so the auditor can read and run
         # but has no Edit or Write to grant.
         permission_mode="default",
-        max_turns=40,
-        model=os.environ.get("AUDIT_MODEL", "bikeshare-coder"),
-        output_format={"type": "json_schema", "schema": REPORT_SCHEMA},
+        max_turns=35,
+        model=None,
+        setting_sources=["project", "local"],
+        output_format=None,
     )
 
     # Only the ResultMessage carries the final answer. Concatenating every
     # intermediate TextBlock ("Let me look at config.py first...") and
     # json.loads-ing the lot fails on the first repo that thinks out loud.
     final: ResultMessage | None = None
-    async for message in query(prompt=f"Audit the repo at {repo}.", options=options):
+    async for message in query(
+        prompt=(
+            f"Audit {repo}. Read only src/config.py, src/features.py, "
+            "src/train.py, and reports/metrics.json first. "
+            "Check selected predictors for target leakage, temporal split, "
+            "lag alignment, and baseline reporting. "
+            "Use tools efficiently. Return the requested JSON fields "
+            "without extra investigation or commentary."
+        ),
+        options=options
+    ):
         if isinstance(message, ResultMessage):
             final = message
 
