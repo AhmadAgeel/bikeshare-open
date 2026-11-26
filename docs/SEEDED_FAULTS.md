@@ -223,3 +223,14 @@ python -m pytest tests/ -q
 16 passed in 7.58s
 
 ```
+
+## Fault 4 - Bash cp bypass
+
+Command: `cp data/raw/bike_daily.csv data/raw/ma6_hook_probe.csv`
+
+The copy was made through Bash, not Claude's Edit or Write tools. The PostToolUse Edit|Write hook therefore did not run automatically.
+
+Original SHA256 before: a6bed1577f6e4de56dcfae6d8315985073cc0ad3446c8c99ed60c86a0b5ad9dc
+Original SHA256 after: a6bed1577f6e4de56dcfae6d8315985073cc0ad3446c8c99ed60c86a0b5ad9dc
+
+The temporary copy was deleted. A PreToolUse Bash hook, filesystem permissions, or a raw-data hash check could detect/prevent this bypass.
