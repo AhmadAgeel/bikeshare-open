@@ -1,0 +1,79 @@
+
+## Fault 1 - Forbidden casual column
+
+Injected change:
+```python
+return [c for c in numeric if c not in FORBIDDEN and c != "humidity_interaction"] + ["casual"]
+```
+
+Manual hook invocation exit code: 2
+Hook stderr (actual):
+```text
+Leakage tests failed after editing src/features.py:
+feats =         dteday  instant  season  ...  cnt_lag_1 cnt_lag_7   cnt_roll_7
+0   2011-01-10     10.0  WINTER  ...      822.0...    1787.0  1530.142857
+713 2012-12-31    731.0  WINTER  ...     1796.0     920.0  1531.428571
+
+[714 rows x 29 columns]
+
+    def test_no_forbidden_features(feats):
+        """Guards the gate, not the data: feature_columns() excludes FORBIDDEN by
+        construction, so this cannot discover a *new* leaky column. What it
+        catches is someone editing feature_columns() or FORBIDDEN -- which is
+        exactly the fault the Step 7 hook demonstrates."""
+        cols = set(feature_columns(feats))
+>       assert not (cols & FORBIDDEN), f"forbidden columns in feature set: {cols & FORBIDDEN}"
+E       AssertionError: forbidden columns in feature set: {'casual'}
+E       assert not ({'atemp', 'casual', 'cnt_lag_1', 'cnt_lag_7', 'cnt_roll_7', 'dayofweek', ...} & {'casual', 'cnt', 'cnt_2d_bfr', 'days_since_2011', 'instant', 'registered', ...})
+
+tests/test_leakage.py:32: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_leakage.py::test_no_forbidden_features - AssertionError: fo...
+1 failed, 8 passed in 5.38s
+
+```
+Hook stdout (actual):
+```text
+
+```
+Test exit code: 2
+Failing test output (actual):
+```text
+python -m pytest tests/ -q
+.....F..........                                                         [100%]
+=================================== FAILURES ===================================
+__________________________ test_no_forbidden_features __________________________
+
+feats =         dteday  instant  season  ...  cnt_lag_1 cnt_lag_7   cnt_roll_7
+0   2011-01-10     10.0  WINTER  ...      822.0...    1787.0  1530.142857
+713 2012-12-31    731.0  WINTER  ...     1796.0     920.0  1531.428571
+
+[714 rows x 29 columns]
+
+    def test_no_forbidden_features(feats):
+        """Guards the gate, not the data: feature_columns() excludes FORBIDDEN by
+        construction, so this cannot discover a *new* leaky column. What it
+        catches is someone editing feature_columns() or FORBIDDEN -- which is
+        exactly the fault the Step 7 hook demonstrates."""
+        cols = set(feature_columns(feats))
+>       assert not (cols & FORBIDDEN), f"forbidden columns in feature set: {cols & FORBIDDEN}"
+E       AssertionError: forbidden columns in feature set: {'casual'}
+E       assert not ({'atemp', 'casual', 'cnt_lag_1', 'cnt_lag_7', 'cnt_roll_7', 'dayofweek', ...} & {'casual', 'cnt', 'cnt_2d_bfr', 'days_since_2011', 'instant', 'registered', ...})
+
+tests/test_leakage.py:32: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_leakage.py::test_no_forbidden_features - AssertionError: fo...
+1 failed, 15 passed in 13.49s
+make: *** [Makefile:16: test] Error 1
+
+```
+Repair: original source bytes restored by script.
+Agent repair turns: N/A (manual restoration).
+PostToolUse hook was invoked manually, not by Claude's Edit tool.
+Recovery output:
+```text
+python -m pytest tests/ -q
+................                                                         [100%]
+16 passed in 7.98s
+
+```
