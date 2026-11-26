@@ -73,3 +73,9 @@ def test_humidity_interaction_value(feats):
     date = pd.to_datetime('2012-01-01')
     row = feats[feats['dteday'] == date].iloc[0]
     assert row['humidity_interaction'] == pytest.approx(694.043791)
+
+
+def test_unknown_weather_label_raises():
+    from src.features import encode_weather
+    with pytest.raises(ValueError, match="unmapped weather"):
+        encode_weather(pd.Series(["UNSEEN_WEATHER"]))
